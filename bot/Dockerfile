@@ -8,6 +8,6 @@ RUN mvn clean package
 
 FROM fabric8/java-alpine-openjdk11-jre:latest
 
-COPY --from=build /U-With-Me-Bot/target/UWMBot.jar /usr/app/UWMBot.jar
+COPY --from=build /uwithme-bot/target/UWMBot.jar /usr/app/UWMBot.jar
 
 CMD java -jar /usr/app/UWMBot.jar
