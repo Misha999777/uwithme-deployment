@@ -27,9 +27,9 @@ services:
       - "5432:5432"
     environment:
       #Change this to any username
-      POSTGRES_PASSWORD: postgres
-      #Change this to any password (and keep it secure)
       POSTGRES_USER: postgres
+      #Change this to any password (and keep it secure)
+      POSTGRES_PASSWORD: postgres
 
   keycloak:
     build: ./keycloak/.
@@ -80,7 +80,7 @@ services:
       VIRTUAL_HOST: u-with-me.education
       VIRTUAL_PORT: 8082
       #Change this to your domain for uwithme-service
-      UWITHME_BACKEND: http://service1.u-with-me.education/api
+      UWITHME_BACKEND: http://service1.u-with-me.education
       #Change this to your domain for keycloak
       UWITHME_KEYCLOAK_URL: http://keycloak.u-with-me.education/auth/realms/KhPI
       #Change this to your domain for testsystem-ui
