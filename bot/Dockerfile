@@ -1,8 +1,10 @@
 FROM misha999777/ubuntu-build:latest AS build
 
-RUN git clone https://github.com/Misha999777/U-With-Me-Bot.git
+RUN git clone https://github.com/Misha999777/uwithme-bot.git
 
-RUN mvn -f /U-With-Me-Bot/pom.xml clean package
+WORKDIR uwithme-bot
+
+RUN mvn clean package
 
 FROM fabric8/java-alpine-openjdk11-jre:latest
 
