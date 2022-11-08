@@ -67,6 +67,7 @@ services:
       #Change this to your domain for keycloak
       UWITHME_KEYCLOAK_HOST: http://keycloak.u-with-me.education/auth
       UWITHME_KEYCLOAK_REALM: KhPI
+      #Change this to new secret from keycloak
       UWITHME_KEYCLOAK_SECRET: 7QBqMplShgrMrYbewRqreg0IPmN7akGA
 
   uwithme-ui:
@@ -106,6 +107,7 @@ services:
       #Change this to your domain for keycloak
       TESTSYSTEM_KEYCLOAK_HOST: http://keycloak.u-with-me.education/auth
       TESTSYSTEM_KEYCLOAK_REALM: KhPI
+      #Change this to new secret from keycloak
       TESTSYSTEM_KEYCLOAK_SECRET: J1CIt0yVlSSVLKj3711o1Uc6KU2GGeuk
 
   testsystem-ui:
@@ -149,4 +151,5 @@ services:
       #Change this to your domain for keycloak
       UNIBOT_KEYCLOAK_HOST: http://keycloak.u-with-me.education/auth
       UNIBOT_KEYCLOAK_REALM: KhPI
+      #Change this to new secret from keycloak
       UNIBOT_KEYCLOAK_SECRET: 894d1c96-8785-4e76-9211-5ef1f483674f
