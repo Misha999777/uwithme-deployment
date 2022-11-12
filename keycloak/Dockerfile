@@ -14,5 +14,8 @@ ENV KEYCLOAK_PASSWORD admin
 ADD realm-export.json /opt/jboss/keycloak/imports/realm-export.json
 ENV KEYCLOAK_IMPORT /opt/jboss/keycloak/imports/realm-export.json
 
+RUN sed -i 's/http-listener/http-listener proxy-address-forwarding="true"/' \
+    /opt/jboss/keycloak/standalone/configuration/standalone.xml
+
 ENTRYPOINT [ "/opt/jboss/tools/start-keycloak.sh" ]
 CMD ["-b", "0.0.0.0"]
