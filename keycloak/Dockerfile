@@ -1,21 +1,19 @@
-FROM fabric8/java-alpine-openjdk11-jre:latest
-EXPOSE 8080
+FROM quay.io/keycloak/keycloak:latest as builder
 
-ENV KEYCLOAK_VERSION 17.0.0
+ENV KC_DB=postgres
 
-RUN apk add bash
-ADD tools /opt/jboss/tools/
-RUN chmod -R 777 /opt/jboss/tools
-RUN /opt/jboss/tools/download-keycloak.sh
+WORKDIR /opt/keycloak
 
-ENV KEYCLOAK_USER admin
-ENV KEYCLOAK_PASSWORD admin
+RUN /opt/keycloak/bin/kc.sh build
 
-ADD realm-export.json /opt/jboss/keycloak/imports/realm-export.json
-ENV KEYCLOAK_IMPORT /opt/jboss/keycloak/imports/realm-export.json
+FROM quay.io/keycloak/keycloak:latest
 
-RUN sed -i 's/http-listener/http-listener proxy-address-forwarding="true"/' \
-    /opt/jboss/keycloak/standalone/configuration/standalone.xml
+ENV KC_HTTP_ENABLED true
+ENV KC_HOSTNAME_STRICT_HTTPS false
+ENV KC_PROXY edge
 
-ENTRYPOINT [ "/opt/jboss/tools/start-keycloak.sh" ]
-CMD ["-b", "0.0.0.0"]
+COPY --from=builder /opt/keycloak/ /opt/keycloak/
+ADD realm-export.json /opt/keycloak/data/import/realm-export.json
+
+ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
+CMD ["start", "--import-realm", "--optimized"]
