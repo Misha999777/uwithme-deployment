@@ -27,8 +27,8 @@
   "oauth2DevicePollingInterval": 5,
   "enabled": true,
   "sslRequired": "external",
-  "registrationAllowed": false,
-  "registrationEmailAsUsername": false,
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": true,
   "rememberMe": false,
   "verifyEmail": false,
   "loginWithEmailAllowed": true,
@@ -55,7 +55,7 @@
       },
       {
         "id": "855e9c89-5f37-4760-a946-de91d243211b",
-        "name": "default-roles-test",
+        "name": "default-roles",
         "description": "${role_default-roles}",
         "composite": true,
         "composites": {
@@ -460,7 +460,7 @@
   "groups": [],
   "defaultRole": {
     "id": "855e9c89-5f37-4760-a946-de91d243211b",
-    "name": "default-roles-test",
+    "name": "default-roles",
     "description": "${role_default-roles}",
     "composite": true,
     "clientRole": false,
@@ -516,7 +516,7 @@
       "requiredActions": [],
       "realmRoles": [
         "ROLE_SERVICE",
-        "default-roles-test"
+        "default-roles"
       ],
       "clientRoles": {
         "uwm-bot": [
@@ -538,7 +538,7 @@
       "requiredActions": [],
       "realmRoles": [
         "ROLE_SERVICE",
-        "default-roles-test"
+        "default-roles"
       ],
       "clientRoles": {
         "realm-management": [
@@ -581,7 +581,7 @@
       "requiredActions": [],
       "realmRoles": [
         "ROLE_SERVICE",
-        "default-roles-test"
+        "default-roles"
       ],
       "clientRoles": {
         "realm-management": [
