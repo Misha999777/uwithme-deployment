@@ -111,7 +111,7 @@ services:
       #Change this to your domain for testsystem-ui
       UWITHME_TESTSYSTEM_URL: https://testsystem.u-with-me.education
       #Change this to your bot username (registered with BotFather)
-      UWITHME_BOT_URL: https://t.me/Misha999777_bot
+      UWITHME_BOT_URL: https://t.me/UniversityWithMe_bot
 
   testsystem-service:
     build: testsystem-service/.
@@ -171,9 +171,9 @@ services:
       #Change this to your postgres password
       UNIBOT_JDBC_PASSWORD: postgres
       #Change this to your bot username (registered with BotFather)
-      UNIBOT_BOT_NAME: Misha999777_bot
+      UNIBOT_BOT_NAME: UniversityWithMe_bot
       #Change this to your bot key (registered with BotFather)
-      UNIBOT_BOT_KEY: 5000361050:AAG3wJ9sRK-xdjO20FUphOI3oHe7IDFOrxY/test
+      UNIBOT_BOT_KEY: 5000316763:AAGtuGji9Er_cqAjV68HHUodyQ_iLmA6WHQ/test
       #Change this to your domain for bot system
       UNIBOT_HOST: https://bot.u-with-me.education
       #Change this to your domain for uwithme-service
