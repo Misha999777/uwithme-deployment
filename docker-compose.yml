@@ -1,8 +1,47 @@
 #Start this with docker compose up -d
 #To update service:
-#    docker compose rm <service name> -s
+#    docker compose rm -s <service name>
 #    docker compose build --no-cache <service name>
-#    docker compose up <service name> -d
+#    docker compose up -d <service name>
+
+x-env:
+    #Change this to any username
+    - &POSTGRES_USER postgres
+    #Change this to any password (and keep it secure)
+    - &POSTGRES_PASSWORD postgres
+    #
+    #Change this to your domain for keycloak
+    - &KEYCLOAK_HOST keycloak.u-with-me.education
+    #Change this to any username
+    - &KEYCLOAK_USER admin
+    #Change this to any password (and keep it secure)
+    - &KEYCLOAK_PASSWORD admin
+    #
+    #Change this to your domain for uwithme backend
+    - &U_WITH_ME_SERVICE_HOST service1.u-with-me.education
+    #Change this to new secret from keycloak
+    - &U_WITH_ME_SERVICE_KEYCLOAK_SECRET mwBTmK6mTIohwxzXzaf241IXuB9mnz8o
+    #
+    #Change this to your domain for uwithme frontend
+    - &U_WITH_ME_UI_HOST u-with-me.education
+    #
+    #Change this to your domain for testsystem backend
+    - &TEST_SYSTEM_SERVICE_HOST service2.u-with-me.education
+    #Change this to new secret from keycloak
+    - &TEST_SYSTEM_SERVICE_KEYCLOAK_SECRET RHaSmEGaKSr4LARtcqpUgBjFXB4adb4h
+    #
+    #Change this to your domain for uwithme frontend
+    - &TEST_SYSTEM_UI_HOST testsystem.u-with-me.education
+    #
+    #Change this to your domain for bot system
+    - &BOT_SERVICE_HOST bot.u-with-me.education
+    #Change this to your bot username (registered with BotFather)
+    - &BOT_BOT_NAME UniversityWithMe_bot
+    #Change this to your bot key (registered with BotFather)
+    - &BOT_BOT_KEY 5000316763:AAGtuGji9Er_cqAjV68HHUodyQ_iLmA6WHQ/test
+    #Change this to new secret from keycloak
+    - &BOT_KEYCLOAK_SECRET cxEUxcYWl8R2tuHVCgqsfLWsi6DGJO4j
+
 services:
 
   nginx-proxy:
@@ -38,10 +77,13 @@ services:
     ports:
       - "5432:5432"
     environment:
-      #Change this to any username
-      POSTGRES_USER: postgres
-      #Change this to any password (and keep it secure)
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: *POSTGRES_USER
+      POSTGRES_PASSWORD: *POSTGRES_PASSWORD
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   keycloak:
     build: ./keycloak/.
@@ -50,22 +92,15 @@ services:
     ports:
       - "8080:8080"
     environment:
-      #Change this to your domain for keycloak
-      VIRTUAL_HOST: keycloak.u-with-me.education
+      VIRTUAL_HOST: *KEYCLOAK_HOST
       VIRTUAL_PORT: 8080
-      #Change this to your domain for keycloak
-      LETSENCRYPT_HOST: keycloak.u-with-me.education
-      #Change this to your domain for keycloak
-      KC_HOSTNAME: keycloak.u-with-me.education
+      LETSENCRYPT_HOST: *KEYCLOAK_HOST
+      KC_HOSTNAME: *KEYCLOAK_HOST
       KC_DB_URL: jdbc:postgresql://db/keycloak
-      #Change this to your postgres username
-      KC_DB_USERNAME: postgres
-      #Change this to your postgres password
-      KC_DB_PASSWORD: postgres
-      #Change this to any username
-      KEYCLOAK_ADMIN: admin
-      #Change this to any password (and keep it secure)
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB_USERNAME: *POSTGRES_USER
+      KC_DB_PASSWORD: *POSTGRES_PASSWORD
+      KEYCLOAK_ADMIN: *KEYCLOAK_USER
+      KEYCLOAK_ADMIN_PASSWORD: *KEYCLOAK_PASSWORD
 
   uwithme-service:
     build: uwithme-service/.
@@ -76,21 +111,18 @@ services:
     volumes:
       - ~/uwm-data:/usr/app/uwithme-user-files
     environment:
-      #Change this to your domain for uwithme backend
-      VIRTUAL_HOST: service1.u-with-me.education
+      VIRTUAL_HOST: *U_WITH_ME_SERVICE_HOST
       VIRTUAL_PORT: 8081
-      #Change this to your domain for uwithme backend
-      LETSENCRYPT_HOST: service1.u-with-me.education
+      LETSENCRYPT_HOST: *U_WITH_ME_SERVICE_HOST
       UWITHME_JDBC_URL: jdbc:postgresql://db/uwithme
-      #Change this to your postgres username
-      UWITHME_JDBC_USER: postgres
-      #Change this to your postgres password
-      UWITHME_JDBC_PASSWORD: postgres
-      #Change this to your domain for keycloak
-      UWITHME_KEYCLOAK_HOST: https://keycloak.u-with-me.education
+      UWITHME_JDBC_USER: *POSTGRES_USER
+      UWITHME_JDBC_PASSWORD: *POSTGRES_PASSWORD
+      UWITHME_KEYCLOAK_HOST: *KEYCLOAK_HOST
       UWITHME_KEYCLOAK_REALM: KhPI
-      #Change this to new secret from keycloak
-      UWITHME_KEYCLOAK_SECRET: mwBTmK6mTIohwxzXzaf241IXuB9mnz8o
+      UWITHME_KEYCLOAK_SECRET: *U_WITH_ME_SERVICE_KEYCLOAK_SECRET
+    depends_on:
+      db:
+        condition: service_healthy
 
   uwithme-ui:
     build: uwithme-ui/.
@@ -99,19 +131,14 @@ services:
     ports:
       - "8082:8082"
     environment:
-      #Change this to your domain for uwithme frontend
-      VIRTUAL_HOST: u-with-me.education
+      VIRTUAL_HOST: *U_WITH_ME_UI_HOST
       VIRTUAL_PORT: 8082
-      #Change this to your domain for uwithme frontend
-      LETSENCRYPT_HOST: u-with-me.education
-      #Change this to your domain for uwithme-service
-      UWITHME_BACKEND: https://service1.u-with-me.education
-      #Change this to your domain for keycloak
-      UWITHME_KEYCLOAK_URL: https://keycloak.u-with-me.education/realms/KhPI
-      #Change this to your domain for testsystem-ui
-      UWITHME_TESTSYSTEM_URL: https://testsystem.u-with-me.education
-      #Change this to your bot username (registered with BotFather)
-      UWITHME_BOT_URL: https://t.me/UniversityWithMe_bot
+      LETSENCRYPT_HOST: *U_WITH_ME_UI_HOST
+      UWITHME_BACKEND_HOST: *U_WITH_ME_SERVICE_HOST
+      UWITHME_KEYCLOAK_HOST: *KEYCLOAK_HOST
+      UWITHME_KEYCLOAK_REALM: KhPI
+      UWITHME_TESTSYSTEM_URL: *TEST_SYSTEM_UI_HOST
+      UWITHME_BOT_NAME: *BOT_BOT_NAME
 
   testsystem-service:
     build: testsystem-service/.
@@ -120,21 +147,18 @@ services:
     ports:
       - "8090:8090"
     environment:
-      #Change this to your domain for testsystem backend
-      VIRTUAL_HOST: service2.u-with-me.education
+      VIRTUAL_HOST: *TEST_SYSTEM_SERVICE_HOST
       VIRTUAL_PORT: 8090
-      #Change this to your domain for testsystem backend
-      LETSENCRYPT_HOST: service2.u-with-me.education
+      LETSENCRYPT_HOST: *TEST_SYSTEM_SERVICE_HOST
       TESTSYSTEM_JDBC_URL: jdbc:postgresql://db/testsystem
-      #Change this to your postgres username
-      TESTSYSTEM_JDBC_USERNAME: postgres
-      #Change this to your postgres password
-      TESTSYSTEM_JDBC_PASSWORD: postgres
-      #Change this to your domain for keycloak
-      TESTSYSTEM_KEYCLOAK_HOST: https://keycloak.u-with-me.education
+      TESTSYSTEM_JDBC_USERNAME: *POSTGRES_USER
+      TESTSYSTEM_JDBC_PASSWORD: *POSTGRES_PASSWORD
+      TESTSYSTEM_KEYCLOAK_HOST: *KEYCLOAK_HOST
       TESTSYSTEM_KEYCLOAK_REALM: KhPI
-      #Change this to new secret from keycloak
-      TESTSYSTEM_KEYCLOAK_SECRET: RHaSmEGaKSr4LARtcqpUgBjFXB4adb4h
+      TESTSYSTEM_KEYCLOAK_SECRET: *TEST_SYSTEM_SERVICE_KEYCLOAK_SECRET
+    depends_on:
+      db:
+        condition: service_healthy
 
   testsystem-ui:
     build: testsystem-ui/.
@@ -143,15 +167,12 @@ services:
     ports:
       - "8091:8091"
     environment:
-      #Change this to your domain for testsystem frontend
-      VIRTUAL_HOST: testsystem.u-with-me.education
+      VIRTUAL_HOST: *TEST_SYSTEM_UI_HOST
       VIRTUAL_PORT: 8091
-      #Change this to your domain for testsystem frontend
-      LETSENCRYPT_HOST: testsystem.u-with-me.education
-      #Change this to your domain for testsystem-service
-      TESTSYSTEM_SERVER_URL: https://service2.u-with-me.education
-      #Change this to your domain for keycloak
-      TESTSYSTEM_KEYCLOAK_URL: https://keycloak.u-with-me.education/realms/KhPI
+      LETSENCRYPT_HOST: *TEST_SYSTEM_UI_HOST
+      TESTSYSTEM_SERVER_HOST: *TEST_SYSTEM_SERVICE_HOST
+      TESTSYSTEM_KEYCLOAK_HOST: *KEYCLOAK_HOST
+      TESTSYSTEM_KEYCLOAK_REALM: KhPI
 
   bot:
     build: bot/.
@@ -160,26 +181,19 @@ services:
     ports:
       - "8010:8010"
     environment:
-      #Change this to your domain for bot system
-      VIRTUAL_HOST: bot.u-with-me.education
+      VIRTUAL_HOST: *BOT_SERVICE_HOST
       VIRTUAL_PORT: 8010
-      #Change this to your domain for bot system
-      LETSENCRYPT_HOST: testsystem.u-with-me.education
+      LETSENCRYPT_HOST: *BOT_SERVICE_HOST
       UNIBOT_JDBC_URL: jdbc:postgresql://db/unibot
-      #Change this to your postgres username
-      UNIBOT_JDBC_USERNAME: postgres
-      #Change this to your postgres password
-      UNIBOT_JDBC_PASSWORD: postgres
-      #Change this to your bot username (registered with BotFather)
-      UNIBOT_BOT_NAME: UniversityWithMe_bot
-      #Change this to your bot key (registered with BotFather)
-      UNIBOT_BOT_KEY: 5000316763:AAGtuGji9Er_cqAjV68HHUodyQ_iLmA6WHQ/test
-      #Change this to your domain for bot system
-      UNIBOT_HOST: https://bot.u-with-me.education
-      #Change this to your domain for uwithme-service
-      UNIBOT_UWITHME_HOST: https://service1.u-with-me.education/api
-      #Change this to your domain for keycloak
-      UNIBOT_KEYCLOAK_HOST: https://keycloak.u-with-me.education
+      UNIBOT_JDBC_USERNAME: *POSTGRES_USER
+      UNIBOT_JDBC_PASSWORD: *POSTGRES_PASSWORD
+      UNIBOT_BOT_NAME: *BOT_BOT_NAME
+      UNIBOT_BOT_KEY: *BOT_BOT_KEY
+      UNIBOT_HOST: *BOT_SERVICE_HOST
+      UNIBOT_UWITHME_HOST: *U_WITH_ME_SERVICE_HOST
+      UNIBOT_KEYCLOAK_HOST: *KEYCLOAK_HOST
       UNIBOT_KEYCLOAK_REALM: KhPI
-      #Change this to new secret from keycloak
-      UNIBOT_KEYCLOAK_SECRET: cxEUxcYWl8R2tuHVCgqsfLWsi6DGJO4j
+      UNIBOT_KEYCLOAK_SECRET: *BOT_KEYCLOAK_SECRET
+    depends_on:
+      db:
+        condition: service_healthy
