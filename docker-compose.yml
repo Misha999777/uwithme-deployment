@@ -1,7 +1,7 @@
 #Start this with docker compose up -d
 #To update service:
 #    docker compose rm -s <service name>
-#    docker compose build --no-cache <service name>
+#    docker compose build <service name>
 #    docker compose up -d <service name>
 
 x-env:
