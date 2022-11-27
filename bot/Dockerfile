@@ -1,5 +1,6 @@
 FROM misha999777/ubuntu-build:latest AS build
 
+ADD https://api.github.com/repos/Misha999777/uwithme-bot/git/refs/heads/master version.json
 RUN git clone https://github.com/Misha999777/uwithme-bot.git
 
 WORKDIR uwithme-bot

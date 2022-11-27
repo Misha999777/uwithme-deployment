@@ -1,5 +1,6 @@
 FROM misha999777/ubuntu-build:latest AS build
 
+ADD https://api.github.com/repos/Misha999777/uwithme-tests/git/refs/heads/master version.json
 RUN git clone https://github.com/Misha999777/uwithme-tests.git
 
 WORKDIR uwithme-tests/testsystem-ui

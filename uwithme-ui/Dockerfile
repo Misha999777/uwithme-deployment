@@ -1,5 +1,6 @@
 FROM misha999777/ubuntu-build:latest AS build
 
+ADD https://api.github.com/repos/HappyMary16/uwithme-client/git/refs/heads/master version.json
 RUN git clone https://github.com/HappyMary16/uwithme-client.git
 
 WORKDIR uwithme-client
