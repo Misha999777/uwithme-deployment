@@ -8,7 +8,7 @@ WORKDIR uwithme-client
 RUN npm install
 RUN npm run-script build
 
-FROM nginx
+FROM nginx:latest
 
 RUN rm -rf /usr/share/nginx/html
 RUN mkdir /usr/share/nginx/html
