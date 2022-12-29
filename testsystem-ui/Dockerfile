@@ -8,7 +8,7 @@ WORKDIR uwithme-tests/testsystem-ui
 RUN npm install
 RUN npx ng build
 
-FROM nginx
+FROM nginx:latest
 
 RUN rm -rf /usr/share/nginx/html
 RUN mkdir /usr/share/nginx/html

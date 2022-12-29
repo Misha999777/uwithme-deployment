@@ -5,7 +5,7 @@ RUN git clone https://github.com/HappyMary16/uwithme-server.git
 
 RUN mvn -f /uwithme-server/pom.xml clean package -DskipTests
 
-FROM fabric8/java-alpine-openjdk11-jre:latest
+FROM openjdk:11.0-jre
 
 COPY --from=build /uwithme-server/uwithme-service/target/UwithmeServiceApp.jar /usr/app/UwithmeServiceApp.jar
 COPY application.properties /usr/app/application.properties

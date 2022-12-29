@@ -7,7 +7,7 @@ WORKDIR uwithme-tests
 
 RUN mvn clean package
 
-FROM fabric8/java-alpine-openjdk11-jre:latest
+FROM openjdk:11.0-jre
 
 COPY --from=build /uwithme-tests/testsystem-service/target/TestSystem.jar /usr/app/TestSystem.jar
 COPY application.properties /usr/app/application.properties

@@ -7,7 +7,7 @@ WORKDIR uwithme-bot
 
 RUN mvn clean package
 
-FROM fabric8/java-alpine-openjdk11-jre:latest
+FROM openjdk:11.0-jre
 
 COPY --from=build /uwithme-bot/target/UWMBot.jar /usr/app/UWMBot.jar
 COPY application.properties /usr/app/application.properties

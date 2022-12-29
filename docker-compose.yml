@@ -58,7 +58,7 @@ services:
       - ~/nginx-data/html:/usr/share/nginx/html
 
   acme-companion:
-    image: nginxproxy/acme-companion
+    image: nginxproxy/acme-companion:latest
     container_name: uwithme-acme-companion
     restart: always
     volumes_from:
@@ -101,6 +101,9 @@ services:
       KC_DB_PASSWORD: *POSTGRES_PASSWORD
       KEYCLOAK_ADMIN: *KEYCLOAK_USER
       KEYCLOAK_ADMIN_PASSWORD: *KEYCLOAK_PASSWORD
+    depends_on:
+      db:
+        condition: service_healthy
 
   uwithme-service:
     build: uwithme-service/.
