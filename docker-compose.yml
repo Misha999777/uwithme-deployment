@@ -58,7 +58,7 @@ services:
       - ~/nginx-data/html:/usr/share/nginx/html
 
   acme-companion:
-    image: nginxproxy/acme-companion:latest
+    image: nginxproxy/acme-companion:2.2.3
     container_name: uwithme-acme-companion
     restart: always
     volumes_from:
@@ -68,7 +68,7 @@ services:
       - ~/nginx-data/acme:/etc/acme.sh
 
   db:
-    image: postgres:latest
+    image: postgres:15.2
     container_name: uwithme-postgres
     restart: always
     volumes:

@@ -1,4 +1,4 @@
-FROM quay.io/keycloak/keycloak:latest as builder
+FROM quay.io/keycloak/keycloak:20.0.5 as builder
 
 ENV KC_DB=postgres
 
@@ -6,7 +6,7 @@ WORKDIR /opt/keycloak
 
 RUN /opt/keycloak/bin/kc.sh build
 
-FROM quay.io/keycloak/keycloak:latest
+FROM quay.io/keycloak/keycloak:20.0.5
 
 ENV KC_HTTP_ENABLED true
 ENV KC_HOSTNAME_STRICT_HTTPS false

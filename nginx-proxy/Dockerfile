@@ -1,4 +1,4 @@
-FROM nginxproxy/nginx-proxy:latest
+FROM nginxproxy/nginx-proxy:1.0
 
 RUN sed -i 's/proxy_buffering off;//' /app/nginx.tmpl
 
