@@ -1,40 +1,42 @@
 #Start this with docker compose up -d
-#To update service:
-#    docker compose rm -s <service name>
-#    docker compose build <service name>
-#    docker compose up -d <service name>
+#To update images:
+#    docker compose pull
+#    docker compose up -d
 
 x-env:
+    #Enable this if running in production
+    - &SSL_ENABLED false
+    #
     #Change this to any username
     - &POSTGRES_USER postgres
     #Change this to any password (and keep it secure)
     - &POSTGRES_PASSWORD postgres
     #
     #Change this to your domain for keycloak
-    - &KEYCLOAK_HOST keycloak.u-with-me.education
+    - &KEYCLOAK_HOST auth.uwm.int
     #Change this to any username
     - &KEYCLOAK_USER admin
     #Change this to any password (and keep it secure)
     - &KEYCLOAK_PASSWORD admin
     #
     #Change this to your domain for uwithme backend
-    - &U_WITH_ME_SERVICE_HOST service1.u-with-me.education
+    - &U_WITH_ME_SERVICE_HOST service1.uwm.int
     #Change this to new secret from keycloak
     - &U_WITH_ME_SERVICE_KEYCLOAK_SECRET mwBTmK6mTIohwxzXzaf241IXuB9mnz8o
     #
     #Change this to your domain for uwithme frontend
-    - &U_WITH_ME_UI_HOST u-with-me.education
+    - &U_WITH_ME_UI_HOST uwm.int
     #
     #Change this to your domain for testsystem backend
-    - &TEST_SYSTEM_SERVICE_HOST service2.u-with-me.education
+    - &TEST_SYSTEM_SERVICE_HOST service2.uwm.int
     #Change this to new secret from keycloak
     - &TEST_SYSTEM_SERVICE_KEYCLOAK_SECRET RHaSmEGaKSr4LARtcqpUgBjFXB4adb4h
     #
     #Change this to your domain for uwithme frontend
-    - &TEST_SYSTEM_UI_HOST testsystem.u-with-me.education
+    - &TEST_SYSTEM_UI_HOST tests.uwm.int
     #
     #Change this to your domain for bot system
-    - &BOT_SERVICE_HOST bot.u-with-me.education
+    - &BOT_SERVICE_HOST bot.uwm.int
     #Change this to your bot username (registered with BotFather)
     - &BOT_BOT_NAME UniversityWithMe_bot
     #Change this to your bot key (registered with BotFather)
@@ -42,98 +44,126 @@ x-env:
     #Change this to new secret from keycloak
     - &BOT_KEYCLOAK_SECRET cxEUxcYWl8R2tuHVCgqsfLWsi6DGJO4j
 
-services:
+networks:
+  uwithme-network:
 
-  nginx-proxy:
-    build: ./nginx-proxy/.
-    container_name: uwithme-proxy
+services:
+  uwithme-nginx-proxy:
+    image: nginxproxy/nginx-proxy:1.3.1
+    container_name: uwithme-nginx-proxy
     restart: always
-    ports:
-      - "80:80"
-      - "443:443"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx-config/proxy.conf:/etc/nginx/proxy.conf
       - ~/nginx-data/certs:/etc/nginx/certs
       - ~/nginx-data/vhost:/etc/nginx/vhost.d
       - ~/nginx-data/html:/usr/share/nginx/html
+    networks:
+      uwithme-network:
+        aliases:
+          - *KEYCLOAK_HOST
+          - *U_WITH_ME_SERVICE_HOST
+          - *U_WITH_ME_UI_HOST
+          - *TEST_SYSTEM_SERVICE_HOST
+          - *TEST_SYSTEM_UI_HOST
+          - *BOT_SERVICE_HOST
+    ports:
+      - "80:80"
+      - "443:443"
 
-  acme-companion:
-    image: nginxproxy/acme-companion:2.2.3
+  uwithme-acme-companion:
+    image: nginxproxy/acme-companion:2.2.8
     container_name: uwithme-acme-companion
     restart: always
     volumes_from:
-      - nginx-proxy
+      - uwithme-nginx-proxy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ~/nginx-data/acme:/etc/acme.sh
+    networks:
+      - uwithme-network
 
-  db:
+  uwithme-postgres:
     image: postgres:15.2
     container_name: uwithme-postgres
     restart: always
     volumes:
-      - ./postgres:/docker-entrypoint-initdb.d
+      - ./postgres-config:/docker-entrypoint-initdb.d
       - ~/postgres-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_USER: *POSTGRES_USER
       POSTGRES_PASSWORD: *POSTGRES_PASSWORD
+    networks:
+      - uwithme-network
+    ports:
+      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  keycloak:
-    build: ./keycloak/.
+  uwithme-keycloak:
+    image: quay.io/keycloak/keycloak:20.0.5
     container_name: uwithme-keycloak
     restart: always
-    ports:
-      - "8080:8080"
+    volumes:
+      - ./keycloak-config:/opt/keycloak/data/import
     environment:
       VIRTUAL_HOST: *KEYCLOAK_HOST
       VIRTUAL_PORT: 8080
       LETSENCRYPT_HOST: *KEYCLOAK_HOST
+      KC_HTTP_ENABLED: true
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_PROXY: edge
       KC_HOSTNAME: *KEYCLOAK_HOST
-      KC_DB_URL: jdbc:postgresql://db/keycloak
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://uwithme-postgres/keycloak
       KC_DB_USERNAME: *POSTGRES_USER
       KC_DB_PASSWORD: *POSTGRES_PASSWORD
       KEYCLOAK_ADMIN: *KEYCLOAK_USER
       KEYCLOAK_ADMIN_PASSWORD: *KEYCLOAK_PASSWORD
+    command:
+      - start --import-realm
+    networks:
+      - uwithme-network
+    ports:
+      - "8080:8080"
     depends_on:
-      db:
+      uwithme-postgres:
         condition: service_healthy
 
   uwithme-service:
-    build: uwithme-service/.
+    image: ghcr.io/happymary16/uwithme-server/uwithme-service:latest
     container_name: uwithme-service
     restart: always
-    ports:
-      - "8081:8081"
     volumes:
       - ~/uwm-data:/usr/app/uwithme-user-files
     environment:
+      SSL_ENABLED: *SSL_ENABLED
       VIRTUAL_HOST: *U_WITH_ME_SERVICE_HOST
       VIRTUAL_PORT: 8081
       LETSENCRYPT_HOST: *U_WITH_ME_SERVICE_HOST
-      UWITHME_JDBC_URL: jdbc:postgresql://db/uwithme
+      UWITHME_JDBC_URL: jdbc:postgresql://uwithme-postgres/uwithme
       UWITHME_JDBC_USER: *POSTGRES_USER
       UWITHME_JDBC_PASSWORD: *POSTGRES_PASSWORD
       UWITHME_KEYCLOAK_HOST: *KEYCLOAK_HOST
       UWITHME_KEYCLOAK_REALM: KhPI
       UWITHME_KEYCLOAK_SECRET: *U_WITH_ME_SERVICE_KEYCLOAK_SECRET
+    networks:
+      - uwithme-network
+    ports:
+      - "8081:8081"
     depends_on:
-      db:
+      uwithme-postgres:
         condition: service_healthy
 
   uwithme-ui:
-    build: uwithme-ui/.
+    image: ghcr.io/happymary16/uwithme-client/uwithme-client:latest
     container_name: uwithme-ui
     restart: always
-    ports:
-      - "8082:8082"
     environment:
+      SSL_ENABLED: *SSL_ENABLED
       VIRTUAL_HOST: *U_WITH_ME_UI_HOST
       VIRTUAL_PORT: 8082
       LETSENCRYPT_HOST: *U_WITH_ME_UI_HOST
@@ -142,52 +172,61 @@ services:
       UWITHME_KEYCLOAK_REALM: KhPI
       UWITHME_TESTSYSTEM_URL: *TEST_SYSTEM_UI_HOST
       UWITHME_BOT_NAME: *BOT_BOT_NAME
-
-  testsystem-service:
-    build: testsystem-service/.
-    container_name: uwithme-testsystem-service
-    restart: always
+    networks:
+      - uwithme-network
     ports:
-      - "8090:8090"
+      - "8082:8082"
+
+  uwithme-tests-service:
+    image: ghcr.io/misha999777/uwithme-tests-service/uwithme-tests-service:latest
+    container_name: uwithme-tests-service
+    restart: always
     environment:
+      SSL_ENABLED: *SSL_ENABLED
       VIRTUAL_HOST: *TEST_SYSTEM_SERVICE_HOST
       VIRTUAL_PORT: 8090
       LETSENCRYPT_HOST: *TEST_SYSTEM_SERVICE_HOST
-      TESTSYSTEM_JDBC_URL: jdbc:postgresql://db/testsystem
+      TESTSYSTEM_JDBC_URL: jdbc:postgresql://uwithme-postgres/testsystem
       TESTSYSTEM_JDBC_USERNAME: *POSTGRES_USER
       TESTSYSTEM_JDBC_PASSWORD: *POSTGRES_PASSWORD
       TESTSYSTEM_KEYCLOAK_HOST: *KEYCLOAK_HOST
       TESTSYSTEM_KEYCLOAK_REALM: KhPI
       TESTSYSTEM_KEYCLOAK_SECRET: *TEST_SYSTEM_SERVICE_KEYCLOAK_SECRET
+    networks:
+      - uwithme-network
+    ports:
+      - "8090:8090"
     depends_on:
-      db:
+      uwithme-postgres:
         condition: service_healthy
 
-  testsystem-ui:
-    build: testsystem-ui/.
-    container_name: uwithme-testsystem-ui
+  uwithme-tests-ui:
+    image: ghcr.io/misha999777/uwithme-tests-ui/uwithme-tests-ui:latest
+    container_name: uwithme-tests-ui
     restart: always
-    ports:
-      - "8091:8091"
     environment:
+      SSL_ENABLED: *SSL_ENABLED
       VIRTUAL_HOST: *TEST_SYSTEM_UI_HOST
       VIRTUAL_PORT: 8091
       LETSENCRYPT_HOST: *TEST_SYSTEM_UI_HOST
       TESTSYSTEM_SERVER_HOST: *TEST_SYSTEM_SERVICE_HOST
       TESTSYSTEM_KEYCLOAK_HOST: *KEYCLOAK_HOST
       TESTSYSTEM_KEYCLOAK_REALM: KhPI
+    networks:
+      - uwithme-network
+    ports:
+      - "8091:8091"
 
-  bot:
-    build: bot/.
+  uwithme-bot:
+    image: ghcr.io/misha999777/uwithme-bot/uwithme-bot:latest
     container_name: uwithme-bot
     restart: always
-    ports:
-      - "8010:8010"
     environment:
+      SSL_ENABLED: *SSL_ENABLED
       VIRTUAL_HOST: *BOT_SERVICE_HOST
       VIRTUAL_PORT: 8010
       LETSENCRYPT_HOST: *BOT_SERVICE_HOST
-      UNIBOT_JDBC_URL: jdbc:postgresql://db/unibot
+      UNIBOT_JDBC_URL: jdbc:postgresql://uwithme-postgres/unibot
       UNIBOT_JDBC_USERNAME: *POSTGRES_USER
       UNIBOT_JDBC_PASSWORD: *POSTGRES_PASSWORD
       UNIBOT_BOT_NAME: *BOT_BOT_NAME
@@ -197,6 +236,10 @@ services:
       UNIBOT_KEYCLOAK_HOST: *KEYCLOAK_HOST
       UNIBOT_KEYCLOAK_REALM: KhPI
       UNIBOT_KEYCLOAK_SECRET: *BOT_KEYCLOAK_SECRET
+    networks:
+      - uwithme-network
+    ports:
+      - "8010:8010"
     depends_on:
-      db:
+      uwithme-postgres:
         condition: service_healthy
