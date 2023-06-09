@@ -138,7 +138,7 @@ services:
     container_name: uwithme-service
     restart: always
     volumes:
-      - ~/uwm-data:/usr/app/uwithme-user-files
+      - ~/uwm-data:/usr/app/uwithme-users-files
     environment:
       SSL_ENABLED: *SSL_ENABLED
       VIRTUAL_HOST: *U_WITH_ME_SERVICE_HOST
