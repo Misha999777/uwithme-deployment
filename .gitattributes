@@ -1,0 +1,9 @@
+*.yml linguist-detectable
+*.conf linguist-detectable
+*.sql linguist-detectable
+*.json linguist-detectable
+
+docker-compose.yml linguist-language=Dockerfile
+proxy.conf linguist-language=Nginx
+
+realm-export.json linguist-generated
