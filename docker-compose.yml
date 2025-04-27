@@ -3,47 +3,6 @@
 #    docker compose pull
 #    docker compose up -d
 
-x-env:
-    #Enable this if running in production
-    - &SSL_ENABLED false
-    #
-    #Change this to any username
-    - &POSTGRES_USER postgres
-    #Change this to any password (and keep it secure)
-    - &POSTGRES_PASSWORD postgres
-    #
-    #Change this to your domain for keycloak
-    - &KEYCLOAK_HOST auth.uwm.int
-    #Change this to any username
-    - &KEYCLOAK_USER admin
-    #Change this to any password (and keep it secure)
-    - &KEYCLOAK_PASSWORD admin
-    #
-    #Change this to your domain for uwithme backend
-    - &U_WITH_ME_SERVICE_HOST service1.uwm.int
-    #Change this to new secret from keycloak
-    - &U_WITH_ME_SERVICE_KEYCLOAK_SECRET mwBTmK6mTIohwxzXzaf241IXuB9mnz8o
-    #
-    #Change this to your domain for uwithme frontend
-    - &U_WITH_ME_UI_HOST uwm.int
-    #
-    #Change this to your domain for testsystem backend
-    - &TEST_SYSTEM_SERVICE_HOST service2.uwm.int
-    #Change this to new secret from keycloak
-    - &TEST_SYSTEM_SERVICE_KEYCLOAK_SECRET RHaSmEGaKSr4LARtcqpUgBjFXB4adb4h
-    #
-    #Change this to your domain for uwithme frontend
-    - &TEST_SYSTEM_UI_HOST tests.uwm.int
-    #
-    #Change this to your domain for bot system
-    - &BOT_SERVICE_HOST bot.uwm.int
-    #Change this to your bot username (registered with BotFather)
-    - &BOT_BOT_NAME UniversityWithMe_bot
-    #Change this to your bot key (registered with BotFather)
-    - &BOT_BOT_KEY 5000316763:AAGtuGji9Er_cqAjV68HHUodyQ_iLmA6WHQ/test
-    #Change this to new secret from keycloak
-    - &BOT_KEYCLOAK_SECRET cxEUxcYWl8R2tuHVCgqsfLWsi6DGJO4j
-
 networks:
   uwithme-network:
 
@@ -61,12 +20,12 @@ services:
     networks:
       uwithme-network:
         aliases:
-          - *KEYCLOAK_HOST
-          - *U_WITH_ME_SERVICE_HOST
-          - *U_WITH_ME_UI_HOST
-          - *TEST_SYSTEM_SERVICE_HOST
-          - *TEST_SYSTEM_UI_HOST
-          - *BOT_SERVICE_HOST
+          - ${KEYCLOAK_HOST}
+          - ${U_WITH_ME_SERVICE_HOST}
+          - ${U_WITH_ME_UI_HOST}
+          - ${TEST_SYSTEM_SERVICE_HOST}
+          - ${TEST_SYSTEM_UI_HOST}
+          - ${BOT_SERVICE_HOST}
     ports:
       - "80:80"
       - "443:443"
@@ -91,8 +50,8 @@ services:
       - ./postgres-config:/docker-entrypoint-initdb.d
       - ~/postgres-data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: *POSTGRES_USER
-      POSTGRES_PASSWORD: *POSTGRES_PASSWORD
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     networks:
       - uwithme-network
     ports:
@@ -110,19 +69,19 @@ services:
     volumes:
       - ./keycloak-config:/opt/keycloak/data/import
     environment:
-      VIRTUAL_HOST: *KEYCLOAK_HOST
+      VIRTUAL_HOST: ${KEYCLOAK_HOST}
       VIRTUAL_PORT: 8080
-      LETSENCRYPT_HOST: *KEYCLOAK_HOST
+      LETSENCRYPT_HOST: ${KEYCLOAK_HOST}
       KC_HTTP_ENABLED: true
       KC_HOSTNAME_STRICT_HTTPS: false
       KC_PROXY: edge
-      KC_HOSTNAME: *KEYCLOAK_HOST
+      KC_HOSTNAME: ${KEYCLOAK_HOST}
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://uwithme-postgres/keycloak
-      KC_DB_USERNAME: *POSTGRES_USER
-      KC_DB_PASSWORD: *POSTGRES_PASSWORD
-      KEYCLOAK_ADMIN: *KEYCLOAK_USER
-      KEYCLOAK_ADMIN_PASSWORD: *KEYCLOAK_PASSWORD
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD}
     command:
       - start --import-realm
     networks:
@@ -140,17 +99,17 @@ services:
     volumes:
       - ~/uwm-data:/usr/app/uwithme-users-files
     environment:
-      SSL_ENABLED: *SSL_ENABLED
-      VIRTUAL_HOST: *U_WITH_ME_SERVICE_HOST
+      SSL_ENABLED: ${SSL_ENABLED}
+      VIRTUAL_HOST: ${U_WITH_ME_SERVICE_HOST}
       VIRTUAL_PORT: 8081
-      LETSENCRYPT_HOST: *U_WITH_ME_SERVICE_HOST
+      LETSENCRYPT_HOST: ${U_WITH_ME_SERVICE_HOST}
       UWITHME_JDBC_URL: jdbc:postgresql://uwithme-postgres/uwithme
-      UWITHME_JDBC_USER: *POSTGRES_USER
-      UWITHME_JDBC_PASSWORD: *POSTGRES_PASSWORD
-      UWITHME_KEYCLOAK_HOST: *KEYCLOAK_HOST
+      UWITHME_JDBC_USER: ${POSTGRES_USER}
+      UWITHME_JDBC_PASSWORD: ${POSTGRES_PASSWORD}
+      UWITHME_KEYCLOAK_HOST: ${KEYCLOAK_HOST}
       UWITHME_KEYCLOAK_REALM: KhPI
-      UWITHME_KEYCLOAK_SECRET: *U_WITH_ME_SERVICE_KEYCLOAK_SECRET
-      UWITHME_BOT_HOST: *BOT_SERVICE_HOST
+      UWITHME_KEYCLOAK_SECRET: ${U_WITH_ME_SERVICE_KEYCLOAK_SECRET}
+      UWITHME_BOT_HOST: ${BOT_SERVICE_HOST}
     networks:
       - uwithme-network
     ports:
@@ -164,15 +123,15 @@ services:
     container_name: uwithme-ui
     restart: always
     environment:
-      SSL_ENABLED: *SSL_ENABLED
-      VIRTUAL_HOST: *U_WITH_ME_UI_HOST
+      SSL_ENABLED: ${SSL_ENABLED}
+      VIRTUAL_HOST: ${U_WITH_ME_UI_HOST}
       VIRTUAL_PORT: 8082
-      LETSENCRYPT_HOST: *U_WITH_ME_UI_HOST
-      UWITHME_BACKEND_HOST: *U_WITH_ME_SERVICE_HOST
-      UWITHME_KEYCLOAK_HOST: *KEYCLOAK_HOST
+      LETSENCRYPT_HOST: ${U_WITH_ME_UI_HOST}
+      UWITHME_BACKEND_HOST: ${U_WITH_ME_SERVICE_HOST}
+      UWITHME_KEYCLOAK_HOST: ${KEYCLOAK_HOST}
       UWITHME_KEYCLOAK_REALM: KhPI
-      UWITHME_TESTSYSTEM_URL: *TEST_SYSTEM_UI_HOST
-      UWITHME_BOT_NAME: *BOT_BOT_NAME
+      UWITHME_TESTSYSTEM_URL: ${TEST_SYSTEM_UI_HOST}
+      UWITHME_BOT_NAME: ${BOT_BOT_NAME}
     networks:
       - uwithme-network
     ports:
@@ -183,16 +142,16 @@ services:
     container_name: uwithme-tests-service
     restart: always
     environment:
-      SSL_ENABLED: *SSL_ENABLED
-      VIRTUAL_HOST: *TEST_SYSTEM_SERVICE_HOST
+      SSL_ENABLED: ${SSL_ENABLED}
+      VIRTUAL_HOST: ${TEST_SYSTEM_SERVICE_HOST}
       VIRTUAL_PORT: 8090
-      LETSENCRYPT_HOST: *TEST_SYSTEM_SERVICE_HOST
+      LETSENCRYPT_HOST: ${TEST_SYSTEM_SERVICE_HOST}
       TESTSYSTEM_JDBC_URL: jdbc:postgresql://uwithme-postgres/testsystem
-      TESTSYSTEM_JDBC_USERNAME: *POSTGRES_USER
-      TESTSYSTEM_JDBC_PASSWORD: *POSTGRES_PASSWORD
-      TESTSYSTEM_KEYCLOAK_HOST: *KEYCLOAK_HOST
+      TESTSYSTEM_JDBC_USERNAME: ${POSTGRES_USER}
+      TESTSYSTEM_JDBC_PASSWORD: ${POSTGRES_PASSWORD}
+      TESTSYSTEM_KEYCLOAK_HOST: ${KEYCLOAK_HOST}
       TESTSYSTEM_KEYCLOAK_REALM: KhPI
-      TESTSYSTEM_KEYCLOAK_SECRET: *TEST_SYSTEM_SERVICE_KEYCLOAK_SECRET
+      TESTSYSTEM_KEYCLOAK_SECRET: ${TEST_SYSTEM_SERVICE_KEYCLOAK_SECRET}
     networks:
       - uwithme-network
     ports:
@@ -206,12 +165,12 @@ services:
     container_name: uwithme-tests-ui
     restart: always
     environment:
-      SSL_ENABLED: *SSL_ENABLED
-      VIRTUAL_HOST: *TEST_SYSTEM_UI_HOST
+      SSL_ENABLED: ${SSL_ENABLED}
+      VIRTUAL_HOST: ${TEST_SYSTEM_UI_HOST}
       VIRTUAL_PORT: 8091
-      LETSENCRYPT_HOST: *TEST_SYSTEM_UI_HOST
-      TESTSYSTEM_SERVER_HOST: *TEST_SYSTEM_SERVICE_HOST
-      TESTSYSTEM_KEYCLOAK_HOST: *KEYCLOAK_HOST
+      LETSENCRYPT_HOST: ${TEST_SYSTEM_UI_HOST}
+      TESTSYSTEM_SERVER_HOST: ${TEST_SYSTEM_SERVICE_HOST}
+      TESTSYSTEM_KEYCLOAK_HOST: ${KEYCLOAK_HOST}
       TESTSYSTEM_KEYCLOAK_REALM: KhPI
     networks:
       - uwithme-network
@@ -223,20 +182,20 @@ services:
     container_name: uwithme-bot
     restart: always
     environment:
-      SSL_ENABLED: *SSL_ENABLED
-      VIRTUAL_HOST: *BOT_SERVICE_HOST
+      SSL_ENABLED: ${SSL_ENABLED}
+      VIRTUAL_HOST: ${BOT_SERVICE_HOST}
       VIRTUAL_PORT: 8010
-      LETSENCRYPT_HOST: *BOT_SERVICE_HOST
+      LETSENCRYPT_HOST: ${BOT_SERVICE_HOST}
       UNIBOT_JDBC_URL: jdbc:postgresql://uwithme-postgres/unibot
-      UNIBOT_JDBC_USERNAME: *POSTGRES_USER
-      UNIBOT_JDBC_PASSWORD: *POSTGRES_PASSWORD
-      UNIBOT_BOT_NAME: *BOT_BOT_NAME
-      UNIBOT_BOT_KEY: *BOT_BOT_KEY
-      UNIBOT_KEYCLOAK_HOST: *KEYCLOAK_HOST
+      UNIBOT_JDBC_USERNAME: ${POSTGRES_USER}
+      UNIBOT_JDBC_PASSWORD: ${POSTGRES_PASSWORD}
+      UNIBOT_BOT_NAME: ${BOT_BOT_NAME}
+      UNIBOT_BOT_KEY: ${BOT_BOT_KEY}
+      UNIBOT_KEYCLOAK_HOST: ${KEYCLOAK_HOST}
       UNIBOT_KEYCLOAK_REALM: KhPI
-      UNIBOT_KEYCLOAK_SECRET: *BOT_KEYCLOAK_SECRET
-      UNIBOT_UWITHME_SERVICE_HOST: *U_WITH_ME_SERVICE_HOST
-      UNIBOT_UWITHME_UI_HOST: *U_WITH_ME_UI_HOST
+      UNIBOT_KEYCLOAK_SECRET: ${BOT_KEYCLOAK_SECRET}
+      UNIBOT_UWITHME_SERVICE_HOST: ${U_WITH_ME_SERVICE_HOST}
+      UNIBOT_UWITHME_UI_HOST: ${U_WITH_ME_UI_HOST}
     networks:
       - uwithme-network
     ports:
