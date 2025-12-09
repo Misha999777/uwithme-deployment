@@ -25,7 +25,7 @@ docker compose up -d
 
 ## Deploying in production
 
-1. Carefully read, understand, and replace values in docker-compose.yml with the appropriate ones
+1. Replace keys and adjust configuration in .env file
 2. Deploy with
 
 ```shell
