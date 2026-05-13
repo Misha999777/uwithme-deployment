@@ -25,7 +25,7 @@ docker compose up -d
 
 ## Deploying in production
 
-1. Replace keys and adjust configuration in .env file
+1. Replace keys and adjust configuration in .env file (don't forget to change Keycloak client secrets)
 2. Deploy with
 
 ```shell
